@@ -7,6 +7,12 @@ import os
 from datetime import datetime
 import gzip
 import json
+import msvcrt as m
+
+
+def wait(message="Press any key to continue..."):
+    print(message)
+    m.getch()
 
 
 def key_press(k, mod):
@@ -74,6 +80,18 @@ if __name__ == "__main__":
         default=False,
         help="Collect the data in a pickle file.",
     )
+    parser.add_argument(
+        "--episodes",
+        type=int,
+        default=0,
+        help="Number of episodes to run. If 0, the agent will run indefinitely.",
+    )
+    parser.add_argument(
+        "--pause",
+        type=bool,
+        default=False,
+        help="Pause after saving data. Press any key to continue.",
+    )
 
     args = parser.parse_args()
 
@@ -117,14 +135,21 @@ if __name__ == "__main__":
                 print("\nstep {}".format(steps))
 
             if args.collect_data and steps % 5000 == 0:
-                print("... saving data")
+                print("... saving data: " + str(len(samples["state"])) + " samples.")
                 store_data(samples, "./data")
                 save_results(episode_rewards, "./results")
+                if args.pause:
+                    wait()
 
             env.render()
             if done:
                 break
 
         episode_rewards.append(episode_reward)
-
+        print("Episode reward: {}".format(episode_reward))
+        if 0 < args.episodes <= len(episode_rewards):
+            break
+    print("... saving data:" + str(len(samples["state"])) + " samples.")
+    store_data(samples, "./data")
+    save_results(episode_rewards, "./results")
     env.close()
