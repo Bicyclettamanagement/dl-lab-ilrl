@@ -14,14 +14,20 @@ if __name__ == "__main__":
     env = gym.make("CartPole-v0").unwrapped
 
     # TODO: load DQN agent
-    # ...
-
+    state_dim = 4
+    num_actions = 2
+    Q_net = MLP(state_dim, num_actions)
+    Q_net.to("cuda")
+    Target_net = MLP(state_dim, num_actions)
+    Target_net.to("cuda")
+    agent = DQNAgent(Q_net, Target_net, num_actions=num_actions)
+    agent.load(os.path.join("models_cartpole", "dqn_agent.pt"))
     n_test_episodes = 15
 
     episode_rewards = []
     for i in range(n_test_episodes):
         stats = run_episode(
-            env, agent, deterministic=True, do_training=False, rendering=True
+            env, agent, deterministic=True, do_training=False, rendering=True, max_timesteps=200
         )
         episode_rewards.append(stats.episode_reward)
 

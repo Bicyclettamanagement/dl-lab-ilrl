@@ -1,7 +1,12 @@
 from __future__ import print_function
 
+import json
+import os
+from datetime import datetime
+
 import gym
 from agent.dqn_agent import DQNAgent
+from imitation_learning.agent.networks import CNN
 from train_carracing import run_episode
 from agent.networks import *
 import numpy as np
@@ -12,17 +17,22 @@ if __name__ == "__main__":
 
     env = gym.make("CarRacing-v0").unwrapped
 
-    history_length = 0
+    history_length = 2
 
     # TODO: Define networks and load agent
-    # ....
+    Q_net = CNN(history_length=history_length, n_classes=5)
+    Q_net.to("cuda")
+    Target_net = CNN(history_length=history_length, n_classes=5)
+    Target_net.to("cuda")
+    agent = DQNAgent(Q_net, Target_net, num_actions=5, history_length=history_length)
+    agent.load("./models_carracing/hl2.pt")
 
     n_test_episodes = 15
 
     episode_rewards = []
     for i in range(n_test_episodes):
         stats = run_episode(
-            env, agent, deterministic=True, do_training=False, rendering=True
+            env, agent, deterministic=True, do_training=False, rendering=True, history_length=history_length
         )
         episode_rewards.append(stats.episode_reward)
 

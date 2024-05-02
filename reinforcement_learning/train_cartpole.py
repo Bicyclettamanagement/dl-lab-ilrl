@@ -1,5 +1,7 @@
 import sys
 
+import torch
+
 sys.path.append("../")
 
 import numpy as np
@@ -12,7 +14,7 @@ from utils import EpisodeStats
 
 
 def run_episode(
-    env, agent, deterministic, do_training=True, rendering=False, max_timesteps=1000
+        env, agent, deterministic, do_training=True, rendering=False, max_timesteps=1000
 ):
     """
     This methods runs one episode for a gym environment.
@@ -48,11 +50,11 @@ def run_episode(
 
 
 def train_online(
-    env,
-    agent,
-    num_episodes,
-    model_dir="./models_cartpole",
-    tensorboard_dir="./tensorboard",
+        env,
+        agent,
+        num_episodes,
+        model_dir="./models_cartpole",
+        tensorboard_dir="./tensorboard",
 ):
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
@@ -79,9 +81,19 @@ def train_online(
         # TODO: evaluate your agent every 'eval_cycle' episodes using run_episode(env, agent, deterministic=True, do_training=False) to
         # check its performance with greedy actions only. You can also use tensorboard to plot the mean episode reward.
         # ...
-        # if i % eval_cycle == 0:
-        #    for j in range(num_eval_episodes):
-        #       ...
+        if i % eval_cycle == 0:
+            for j in range(num_eval_episodes):
+                stats = run_episode(env, agent, deterministic=True, do_training=False)
+            mean_reward = torch.tensor(stats.episode_reward).mean().item()
+            tensorboard.write_episode_data(
+                i,
+                eval_dict={
+                    "mean_reward": mean_reward,
+                    "a_0": stats.get_action_usage(0),
+                    "a_1": stats.get_action_usage(1),
+                },
+            )
+            print("mean reward: ", mean_reward)
 
         # store model.
         if i % eval_cycle == 0 or i >= (num_episodes - 1):
@@ -91,8 +103,7 @@ def train_online(
 
 
 if __name__ == "__main__":
-
-    num_eval_episodes = 5  # evaluate on 5 episodes
+    num_eval_episodes = 10  # evaluate on 5 episodes
     eval_cycle = 20  # evaluate every 10 episodes
 
     # You find information about cartpole in
@@ -108,3 +119,9 @@ if __name__ == "__main__":
     # 1. init Q network and target network (see dqn/networks.py)
     # 2. init DQNAgent (see dqn/dqn_agent.py)
     # 3. train DQN agent with train_online(...)
+    Q_net = MLP(state_dim, num_actions)
+    Q_net.to("cuda")
+    Target_net = MLP(state_dim, num_actions)
+    Target_net.to("cuda")
+    agent = DQNAgent(Q_net, Target_net, num_actions=num_actions)
+    train_online(env, agent, 5000)

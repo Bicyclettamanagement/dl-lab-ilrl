@@ -44,8 +44,9 @@ def store_data(data, datasets_dir="./data"):
     # save data
     if not os.path.exists(datasets_dir):
         os.mkdir(datasets_dir)
+    index = len(os.listdir(datasets_dir))
     data_file = os.path.join(datasets_dir, "data.pkl.gzip")
-    f = gzip.open(data_file, "wb")
+    f = gzip.open(data_file, "ab")
     pickle.dump(data, f)
 
 

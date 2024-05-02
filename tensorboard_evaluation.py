@@ -5,11 +5,14 @@ from torch.utils.tensorboard import SummaryWriter
 
 class Evaluation:
 
-    def __init__(self, store_dir, name, stats=[]):
+    def __init__(self, store_dir, name, stats=None):
         """
         Creates placeholders for the statistics listed in stats to generate tensorboard summaries.
         e.g. stats = ["loss"]
         """
+        if stats is None:
+            stats = ["loss", "train_accuracy", "valid_accuracy", "1_episode_reward",
+                     "mean_reward", "a_0", "a_1", "straight", "left", "right", "accel", "brake"]
         self.folder_id = "%s-%s" % (name, datetime.now().strftime("%Y%m%d-%H%M%S"))
         self.summary_writer = SummaryWriter(os.path.join(store_dir, self.folder_id))
         self.stats = stats
